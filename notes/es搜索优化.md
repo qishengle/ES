@@ -22,8 +22,8 @@
 	- sqrt：计算平方根
 	- reciprocal：计算倒数
 ---
-`
-	{
+```
+{
   "query": {
     "function_score": {
       "query": {
@@ -40,7 +40,7 @@
     }
   }
 }
-`
+```
 
 #### 3. <font color="orange">random_score</font>：随机得到 0 到 1 分数
 衰减函数：同样以某个字段的值为标准，距离某个值越近得分越高
