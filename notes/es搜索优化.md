@@ -1,7 +1,7 @@
 ## [Function Score Query](https://blog.csdn.net/wwd0501/article/details/78652850)
 
 > ### <font color="lightpink"  face="思源黑体">优化Elasticsearch搜索结果</font>
-- #### <table><tr><td bgcolor="lightgreen"><code>function_score 提供了几种默认的计算分值的函数：</code></td></tr></table>
+#### <table><tr><td bgcolor="lightgreen"><code>function_score 提供了几种默认的计算分值的函数：</code></td></tr></table>
 
 #### 1.  <font color="orange">weight</font>：设置权重
     只需要设置一个数字作为权重，文档的分数就会乘以该权重。
@@ -9,6 +9,7 @@
 #### 2. <font color="orange">field_value_factor</font>：将某个字段的值进行计算得出分数。
 通过文档中某个字段的值计算出一个分数，它有以下属性：
 - field：指定字段名
+
 - factor：对字段值进行预处理，乘以指定的数值（默认为 1）
 - modifier将字段值进行加工，有以下的几个选项：
 	- none：不处理
