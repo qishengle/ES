@@ -90,14 +90,13 @@ _score = _score + log (1 + 0.1 * sales)
 这时候就需要 script_score 了，它支持我们自己编写一个脚本运行，在该脚本中我们可以拿到当前文档的所有字段信息，并且只需要将计算的分数作为返回值传回Elasticsearch 即可。
 
 > 使用脚本需要首先在配置文件中打开相关功能：
-`
+```
 script.groovy.sandbox.enabled: true
-
 script.inline: on
 script.indexed: on
 script.search: on
 script.engine.groovy.inline.aggs: on
-`
+```
 它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，有以下选项：
   - <font color="green">multiply</font>：将结果乘以_score
 
