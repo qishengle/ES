@@ -178,7 +178,7 @@ script_score有一个属性boost_mode可以指定计算后的分数与原始的_
   }
 }
 ```
-[^注：其中所有以$开头的都是变量]
+
 hello[^hello]
 [^hello]: hi
 
