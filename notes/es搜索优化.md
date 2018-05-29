@@ -44,10 +44,22 @@
 ```
 这条查询会将标题中带有雨伞的商品检索出来，然后对这些文档计算一个与库存相关的分数，并与之前相关度的分数相加，对应的公式为：
 _score = _score + log (1 + 0.1 * sales)
+
 #### 3. <font color="orange">random_score</font>：随机得到 0 到 1 分数
 衰减函数：同样以某个字段的值为标准，距离某个值越近得分越高
+调用该函数返回一个 0 到 1 的分数，可以通过seed属性设置一个随机种子，该函数保证在随机种子相同时返回值也相同，这点使得它可以轻松地实现对于用户的个性化推荐。
 
-#### 4. <font color="orange">script_score</font>：通过自定义脚本计算分值
+#### 4. <font color="orange">衰减函数（Decay Function）</font>：以某个字段的值为标准，距离某个值越近得分越高
+它描述了这样一种情况：对于一个字段，它有一个理想的值，而字段实际的值越偏离这个理想值（无论是增大还是减小），就越不符合期望。这个函数可以很好的应用于数值、日期和地理位置类型，由以下属性组成：
+- 原点（origin）：该字段最理想的值，这个值可以得到满分（1.0）
+
+- 偏移量（offset）：与原点相差在偏移量之内的值也可以得到满分
+- 衰减规模（scale）：当值超出了原点到偏移量这段范围，它所得的分数就开始进行衰减了，衰减规模决定了这个分数衰减速度的快慢
+- 衰减值（decay）：该字段可以被接受的值（默认为 0.5），相当于一个分界点，具体的效果与衰减的模式有关。
+衰减函数还可以指定三种不同的模式：线性函数（linear）、以 e 为底的指数函数（Exp）和高斯函数（gauss），它们拥有不同的衰减曲线：
+![enter description here](./images/untitled.png)
+
+#### 5. <font color="orange">script_score</font>：通过自定义脚本计算分值
 它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，有以下选项：
   - <font color="green">multiply</font>：将结果乘以_score
 
@@ -56,4 +68,3 @@ _score = _score + log (1 + 0.1 * sales)
   - <font color="green">max</font>：取结果与_score的较大值
   - <font color="green">replace</font>：使结果替换掉_score
 
-### 
