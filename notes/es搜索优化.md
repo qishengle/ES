@@ -129,7 +129,12 @@ script_score有一个属性boost_mode可以指定计算后的分数与原始的_
 在 function_score 中可以使用functions属性指定多个函数。它是一个数组，所以原有函数不需要发生改动。同时还可以通过score_mode指定各个函数分值之间的合并处理
 它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，值与boost_mode相同。
 *e.g1*
-向用户推荐一些不错的餐馆，特征是：范围要在当前位置的 5km 以内，有停车位是最重要的，有 Wi-Fi 更好，餐厅的评分（1 分到 5 分）越高越好，并且对不同用户最好展示不同的结果以增加随机性。
+向用户推荐一些不错的餐馆，特征是：
+- 范围要在当前位置的 5km 以内，
+
+- 有停车位是最重要的，有 Wi-Fi 更好，
+- 餐厅的评分（1 分到 5 分）越高越好，
+- 并且对不同用户最好展示不同的结果以增加随机性。
 ```
 {
   "query": {
@@ -178,8 +183,53 @@ script_score有一个属性boost_mode可以指定计算后的分数与原始的_
   }
 }
 ```
+###### 注：其中所有以$开头的都是变量
 
-hello[^hello]
-[^hello]: hi
-
-**e.g2**
+*e.g2*社交网站
+现在要优化搜索功能
+- 使其以文本相关度排序为主，
+- 越新的微博会排在相对靠前的位置，
+- 点赞（忽略相同计算方式的转发和评论）数较高的微博也会排在较前面。
+- 如果这篇微博购买了推广并且是创建不到 24 小时（同时满足），位置会非常靠前。
+```
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "content": "$text"
+        }
+      },
+      "functions": [
+        {
+          "gauss": {
+            "createDate": {
+              "origin": "$now",
+              "scale": "6d",
+              "offset": "1d"
+            }
+          }
+        },
+        {
+          "field_value_factor": {
+            "field": "like_count",
+            "modifier": "log1p",
+            "factor": 0.1
+          }
+        },
+        {
+          "script_score": {
+            "script": "return doc ['is_recommend'].value && doc ['create_date'] > time ? 1.5 : 1.0",
+            params: {
+                "time": $time
+            }
+          }
+        }
+      ],
+      "boost_mode": "multiply"
+    }
+  }
+}
+```
+###### 它的公式为：
+`_score * gauss (create_date, $now, "1d", "6d") * log (1 + 0.1 * like_count) * is_recommend ? 1.5 : 1.0`
