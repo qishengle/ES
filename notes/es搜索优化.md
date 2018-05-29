@@ -23,6 +23,7 @@
 	- sqrt：计算平方根
 	- reciprocal：计算倒数
 ---
+***
 ```
 {
   "query": {
@@ -96,34 +97,87 @@ _score = _score + log (1 + 0.1 * sales)
 > script.search: on 
 > script.engine.groovy.inline.aggs: on 
 > ```
-*e.g*
-    
-	有一个位置索引，它有一个分类（category）属性，该属性是字符串枚举类型，
-	例如商场、电影院或者餐厅等。现在由于我们有一个电影相关的活动，	所以需要
-	将电影院在搜索列表中的排位相对靠前。
-```
-	{
-  "query": {
-    "function_score": {
-      "query": {
-        "match": {
-          "name": "天安门"
-        }
-      },
-      "script_score": {
-        "script": "return doc ['category'].value == '电影院' ? 1.1 : 1.0"
-      }
-    }
-  }
-}
-```
-
-#### 6. 同时使用多个函数
-它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，有以下选项：
+script_score有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，有以下选项：
   - <font color="green">multiply</font>：将结果乘以_score
 
   - <font color="green">sum</font>：将结果加上_score
   - <font color="green">min</font>：取结果与_score的较小值
   - <font color="green">max</font>：取结果与_score的较大值
   - <font color="green">replace</font>：使结果替换掉_score
+*e.g*
+    
+	有一个位置索引，它有一个分类（category）属性，该属性是字符串枚举类型，
+	例如商场、电影院或者餐厅等。现在由于我们有一个电影相关的活动，	所以需要
+	将电影院在搜索列表中的排位相对靠前。
 
+	{
+	  "query": {
+		"function_score": {
+		  "query": {
+			"match": {
+			  "name": "天安门"
+			}
+		  },
+		  "script_score": {
+			"script": "return doc ['category'].value == '电影院' ? 1.1 : 1.0"
+		  }
+		}
+	  }
+	}
+
+
+#### 6. 同时使用多个函数
+在 function_score 中可以使用functions属性指定多个函数。它是一个数组，所以原有函数不需要发生改动。同时还可以通过score_mode指定各个函数分值之间的合并处理
+它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，值与boost_mode相同。
+**e.g1**
+向用户推荐一些不错的餐馆，特征是：范围要在当前位置的 5km 以内，有停车位是最重要的，有 Wi-Fi 更好，餐厅的评分（1 分到 5 分）越高越好，并且对不同用户最好展示不同的结果以增加随机性。
+`
+{
+  "query": {
+    "function_score": {
+      "filter": {
+        "geo_distance": {
+          "distance": "5km",
+          "location": {
+            "lat": $lat,
+            "lon": $lng
+          }
+        }
+      },
+      "functions": [
+        {
+          "filter": {
+            "term": {
+              "features": "wifi"
+            }
+          },
+          "weight": 1
+        },
+        {
+          "filter": {
+            "term": {
+              "features": "停车位"
+            }
+          },
+          "weight": 2
+        },
+        {
+            "field_value_factor": {
+               "field": "score",
+               "factor": 1.2
+             }
+        },
+        {
+          "random_score": {
+            "seed": "$id"
+          }
+        }
+      ],
+      "score_mode": "sum",
+      "boost_mode": "multiply"
+    }
+  }
+}
+`
+注：其中所有以$开头的都是变量
+**e.g2**
