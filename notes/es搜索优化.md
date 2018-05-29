@@ -51,15 +51,49 @@ _score = _score + log (1 + 0.1 * sales)
 
 #### 4. <font color="orange">衰减函数（Decay Function）</font>：以某个字段的值为标准，距离某个值越近得分越高
 它描述了这样一种情况：对于一个字段，它有一个理想的值，而字段实际的值越偏离这个理想值（无论是增大还是减小），就越不符合期望。这个函数可以很好的应用于数值、日期和地理位置类型，由以下属性组成：
-- 原点（origin）：该字段最理想的值，这个值可以得到满分（1.0）
+ 1. 原点（origin）：该字段最理想的值，这个值可以得到满分（1.0）
 
-- 偏移量（offset）：与原点相差在偏移量之内的值也可以得到满分
-- 衰减规模（scale）：当值超出了原点到偏移量这段范围，它所得的分数就开始进行衰减了，衰减规模决定了这个分数衰减速度的快慢
-- 衰减值（decay）：该字段可以被接受的值（默认为 0.5），相当于一个分界点，具体的效果与衰减的模式有关。
+ 2. 偏移量（offset）：与原点相差在偏移量之内的值也可以得到满分
+ 3. 衰减规模（scale）：当值超出了原点到偏移量这段范围，它所得的分数就开始进行衰减了，衰减规模决定了这个分数衰减速度的快慢
+ 4. 衰减值（decay）：该字段可以被接受的值（默认为 0.5），相当于一个分界点，具体的效果与衰减的模式有关。
 衰减函数还可以指定三种不同的模式：线性函数（linear）、以 e 为底的指数函数（Exp）和高斯函数（gauss），它们拥有不同的衰减曲线：
 ![衰减函数](./images/untitled.png)
-
+**e.g**
+我们希望租房的位置在40, 116坐标附近，5km以内是满意的距离，15km以内是可以接受的距离:
+```
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "title": "公寓"
+        }
+      },
+      "gauss": {
+        "location": {
+          "origin": { "lat": 40, "lon": 116 },
+          "offset": "5km",
+          "scale": "10km"
+           }
+         },
+         "boost_mode": "sum"
+    }
+  }
+}
+```
 #### 5. <font color="orange">script_score</font>：通过自定义脚本计算分值
+虽然强大的 field\_value\_factor 和衰减函数已经可以解决大部分问题了，但是也可以看出它们还有一定的局限性：
+
+1. 这两种方式都只能针对一个字段计算分值
+
+2. 这两种方式应用的字段类型有限，field\_value\_factor 一般只用于数字类型，而衰减函数一般只用于数字、位置和时间类型
+这时候就需要 script_score 了，它支持我们自己编写一个脚本运行，在该脚本中我们可以拿到当前文档的所有字段信息，并且只需要将计算的分数作为返回值传回Elasticsearch 即可。
+^[使用脚本需要首先在配置文件中打开相关功能：]
+    script.groovy.sandbox.enabled: true
+	script.inline: on
+	script.indexed: on
+	script.search: on
+	script.engine.groovy.inline.aggs: on
 它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，有以下选项：
   - <font color="green">multiply</font>：将结果乘以_score
 
