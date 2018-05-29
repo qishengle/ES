@@ -57,7 +57,7 @@ _score = _score + log (1 + 0.1 * sales)
 - 衰减规模（scale）：当值超出了原点到偏移量这段范围，它所得的分数就开始进行衰减了，衰减规模决定了这个分数衰减速度的快慢
 - 衰减值（decay）：该字段可以被接受的值（默认为 0.5），相当于一个分界点，具体的效果与衰减的模式有关。
 衰减函数还可以指定三种不同的模式：线性函数（linear）、以 e 为底的指数函数（Exp）和高斯函数（gauss），它们拥有不同的衰减曲线：
-![enter description here](./images/untitled.png)
+![衰减函数](./images/untitled.png)
 
 #### 5. <font color="orange">script_score</font>：通过自定义脚本计算分值
 它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，有以下选项：
