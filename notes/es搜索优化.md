@@ -86,9 +86,8 @@ _score = _score + log (1 + 0.1 * sales)
 
 1. 这两种方式都只能针对一个字段计算分值
 
-2. 这两种方式应用的字段类型有限，field\_value\_factor 一般只用于数字类型，而衰减函数一般只用于数字、位置和时间类型
+2. 这两种方式应用的字段类型有限，field_value_factor 一般只用于数字类型，而衰减函数一般只用于数字、位置和时间类型
 这时候就需要 script_score 了，它支持我们自己编写一个脚本运行，在该脚本中我们可以拿到当前文档的所有字段信息，并且只需要将计算的分数作为返回值传回Elasticsearch 即可。
-
 > 使用脚本需要首先在配置文件中打开相关功能：
 > ```
 > script.groovy.sandbox.enabled: true 
@@ -97,7 +96,10 @@ _score = _score + log (1 + 0.1 * sales)
 > script.search: on 
 > script.engine.groovy.inline.aggs: on 
 > ```
+*e.g*
+    有一个位置索引，它有一个分类（category）属性，该属性是字符串枚举类型，例    如商场、电影院或者餐厅等。现在由于我们有一个电影相关的活动，所以需要将电    影院在搜索列表中的排位相对靠前。
 
+#### 6. 同时使用多个函数
 它还有一个属性boost_mode可以指定计算后的分数与原始的_score如何合并，有以下选项：
   - <font color="green">multiply</font>：将结果乘以_score
 
