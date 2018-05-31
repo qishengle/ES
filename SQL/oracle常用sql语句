@@ -1,0 +1,105 @@
+1 //查看日志文件的组号，成员，大小，状态等
+select 
+	v$log.group#,member,members,bytes/1024/1024 size_m,v$log.status 
+from 
+	v$log,v$logfile 
+where 
+	v$log.group#=v$logfile.group#  order by  v$log.group#
+/
+
+
+2 //查看表空间，所含文件，类型
+select 
+	tablespace_name,max(file_name) filename, max(contents) contens  
+from 
+	(select	
+		tablespace_name,file_namenull contents  
+	from 
+		dba_data_files
+	union
+	select 	
+		tablespace_name,file_name,null 
+	from 	
+		dba_temp_files
+	union
+	select 	
+		tablespace_name,null,contents 
+	from 	
+		dba_tablespaces
+	)
+	group  by tablespace_name
+/
+
+
+
+3 //查看表空间使用情况，空闲百分比
+select 
+    a.TABLESPACE_NAME,a.curr_mb,b.free_mb,a.max_mb,round((b.free_mb/a.curr_mb)*100,3)||'%' "free_pct"
+from
+    (select tablespace_name,sum(bytes/1048576) curr_MB,sum(MAXBYTES/1048576) MAX_MB from dba_data_files group by TABLESPACE_NAME) a,
+    (select TABLESPACE_NAME,sum(bytes/1048576) free_mb from dba_free_space group by TABLESPACE_NAME) b
+where a.TABLESPACE_NAME = b.TABLESPACE_NAME
+/
+
+
+4 //数据库移动批量修改文件位置参数
+select 'alter database rename file '||chr(39)||name||chr(39)||' to '||chr(39)||replace(name,'u02','u01')||chr(39)||';'
+from
+    (select name from v$controlfile
+    union
+    select member from v$logfile
+    union
+    select name from v$tempfile
+    union
+    select name from v$datafile
+    )
+/
+
+
+5 //oracle用户下，source后执行脚本查询
+#!/bin/bash
+sqlplus -s scott/Tiger <<EOT
+select ename,deptno from emp where deptno=10;
+EOT
+
+
+6 //oracle开机启库
+
+	//oracle用户家目录下start.sh
+#/bin/bash
+source .11g
+ps -ef |grep ora_ |grep -v grep >/dev/null
+if [ $? -ne 0 ]; then
+        dbstart
+        echo "---startup oracle 11g---"
+else
+        echo "---oracle 11g already running!---"
+fi
+	//vim  /etc/rc.local
+su - oracle -s /bin/bash start.sh
+
+7 
+ //v$datafile
+select file#,name,status from v$datafile;
+
+  //v$tempfile
+select file#,name,status from v$tempfile;
+
+  //v$log
+select  GROUP#,SEQUENCE# ,MEMBERS,STATUS,archived from v$log;
+
+  //v$logfile
+select  GROUP#,STATUS,MEMBER from v$logfile;
+
+8  //查看角色（用户）有哪些权限
+select privilege from dba_sys_privs where grantee='SCOTT';
+    这只是一部分，还需要看分配了哪些角色
+select granted_role from dba_role_privs where grantee='SCOTT';
+    再查询拥有的角色的详细权限
+    
+9  //挖表的数据源
+select dbms_metadata.get_ddl('TABLE','EMP','SCOTT') from dual;
+    
+ 10 //查看字符集
+ select * from nls_database_parameters where rownum<7;
+

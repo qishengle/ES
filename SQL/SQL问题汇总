@@ -1,0 +1,230 @@
+1 排序
+SQL Server 的语法：
+    SELECT TOP number|percent column_name(s) FROM table_name
+
+MySQL 和 Oracle 中的 SQL SELECT TOP 是等价的
+
+MySQL 语法
+    SELECT column_name(s) FROM table_name LIMIT number
+
+Oracle 语法
+    SELECT column_name(s) FROM table_name WHERE ROWNUM <= number
+
+
+2 SQL 通配符
+在搜索数据库中的数据时，SQL 通配符可以替代一个或多个字符。
+SQL 通配符必须与 LIKE 运算符一起使用，在 SQL 中，可使用以下通配符：
+
+%        替代一个或多个字符
+_        仅替代一个字符
+
+[list]  字符列中的任何单一字符
+[^list]或者[!charlist]  不在字符列中的任何单一字符
+
+3 不同的数据库对 BETWEEN...AND 操作符的处理方式是有差异的（包含或不包含）。
+               显示范围之外的，在前加上 NOT 操作符
+
+4 不同 JOIN 之间的差异：
+    JOIN: 如果表中有至少一个匹配，则返回行（即默认的 inner join）
+    LEFT JOIN: 即使右表中没有匹配，也从左表返回所有的行 （有些数据库中是 LEFT OUTER JOIN）
+             左表为基准，其每一行匹配右表全表，左表有而右表没有的，左表行显示右表行空值填充
+    RIGHT JOIN: 即使左表中没有匹配，也从右表返回所有的行（RIGHT OUTER JOIN）
+             右表为基准，其每一行匹配左表全表，右表有而左表没有的，右表行显示左表行空值填充
+    FULL JOIN: 只要其中一个表中存在匹配，就返回行       （FULL OUTER JOIN）【左连接和右连接的并集】
+         join连接可多次写：a left join b on XX=XX left join c on XX=XX ...
+5 UNION
+UNION 内部的 SELECT 语句的列必须拥有：相同数量，相同顺序，对应列数据类型相似。
+UNION 操作符选取不同的值。 如果允许重复的值（并且不排序），用 UNION ALL
+UNION 结果集中的列名总是等于 UNION 中第一个 SELECT 语句中的列名
+
+6 SELECT INTO 
+SELECT INTO 语句从一个表中选取数据，然后把数据插入另一个表中。
+            常用于创建表的备份复件或者用于对记录进行存档。
+
+SELECT * INTO Persons_backup FROM Persons
+IN 子句可用于向另一个数据库中拷贝表：
+SELECT * INTO Persons IN 'Backup.mdb' FROM Persons
+
+7 SQL 约束 (Constraints)
+    NOT NULL
+
+    UNIQUE
+        1）下面的 SQL 在 "Persons" 表创建时在 "Id_P" 列创建 UNIQUE 约束：
+        MySQL:
+            CREATE TABLE Persons
+            (
+               Id_P int NOT NULL,
+               LastName varchar(255) NOT NULL,
+               UNIQUE (Id_P)
+            )
+        SQL Server / Oracle / MS Access:
+            CREATE TABLE Persons
+            (
+               Id_P int NOT NULL UNIQUE,
+               LastName varchar(255) NOT NULL
+            )
+        2）如果需要命名 UNIQUE 约束，以及为多个列定义 UNIQUE 约束，请使用下面的 SQL 语法：
+        MySQL / SQL Server / Oracle / MS Access:
+            CREATE TABLE Persons
+            (
+               Id_P int NOT NULL,
+               LastName varchar(255) NOT NULL,
+               City varchar(255),
+               CONSTRAINT uc_PersonID UNIQUE (Id_P,LastName)
+            )
+        3）当表已被创建时，如需在 "Id_P" 列创建 UNIQUE 约束，请使用下列 SQL：
+        MySQL / SQL Server / Oracle / MS Access:
+            ALTER TABLE Persons ADD UNIQUE (Id_P)
+        4）如需命名 UNIQUE 约束，并定义多个列的 UNIQUE 约束，请使用下面的 SQL 语法：
+        MySQL / SQL Server / Oracle / MS Access:
+            ALTER TABLE Persons ADD CONSTRAINT uc_PersonID UNIQUE (Id_P,LastName)
+        5）如需撤销 UNIQUE 约束，请使用下面的 SQL：
+        MySQL:
+            ALTER TABLE Persons DROP INDEX uc_PersonID
+        SQL Server / Oracle / MS Access:
+            ALTER TABLE Persons DROP CONSTRAINT uc_PersonID
+
+    PRIMARY KEY
+        CONSTRAINT pk_PersonID PRIMARY KEY (Id_P,LastName)
+
+    FOREIGN KEY
+        CONSTRAINT fk_PerOrders FOREIGN KEY (Id_P) REFERENCES Persons(Id_P)
+            )
+
+    CHECK
+        CHECK (Id_P>0 AND City='Sandnes')
+
+    DEFAULT
+        1) City varchar(255) DEFAULT 'Sandnes'
+        2) 如果在表已存在的情况下为 "City" 列创建 DEFAULT 约束，请使用下面的 SQL：
+        MySQL:
+            ALTER TABLE Persons
+            ALTER City SET DEFAULT 'SANDNES'
+        SQL Server / Oracle / MS Access:
+            ALTER TABLE Persons
+            ALTER COLUMN City SET DEFAULT 'SANDNES'
+        3) 如需撤销 DEFAULT 约束，请使用下面的 SQL：
+        MySQL:
+            ALTER TABLE Persons
+            ALTER City DROP DEFAULT
+        SQL Server / Oracle / MS Access:
+            ALTER TABLE Persons
+            ALTER COLUMN City DROP DEFAULT
+
+每个表可以有多个 UNIQUE 约束，但是每个表只能有一个 PRIMARY KEY 约束
+
+8 INDEX
+创建一个简单的索引。允许使用重复的值：
+    CREATE INDEX PersonIndex ON Person (LastName DESC,FirstName) 
+创建一个唯一的索引。两个行不能拥有相同的索引值。
+    CREATE UNIQUE INDEX index_name ON table_name (column_name)
+
+删除索引：
+    MS SQL Server 的语法:  DROP INDEX table_name.index_name
+    Oracle 语法:           DROP INDEX index_name
+    MySQL 的语法:          ALTER TABLE table_name DROP INDEX index_name
+
+9 DROP
+DROP TABLE 表名称
+DROP DATABASE 数据库名称
+TRUNCATE TABLE 表名称
+
+10 VIEW
+CREATE VIEW view_name AS
+SELECT column_name(s)
+FROM table_name
+WHERE condition
+
+
+11 UPDATE
+语句一
+UPDATE A SET A.c2 =B.c3
+from A ,B
+where A.c1=B.c1
+
+语句二
+UPDATE A
+SET A.c2 =B.c3
+from A inner join B on A.c1=B.c1
+
+注意：
+update后面是不能跟多表的，即一次只能更新一张表。from子句后面可跟多张表，别名也只能在此指定，而不能在update后面指定别名
+
+
+12 SELECT INTO 和 INSERT INTO SELECT 两种表复制语句 
+1.INSERT INTO SELECT语句
+ 语句形式为：Insert into Table2(field1,field2,...) select value1,value2,... from Table1
+ 要求目标表Table2必须存在，由于目标表Table2已经存在，所以我们除了插入源表Table1的字段外，还可以插入常量
+
+2.SELECT INTO FROM语句
+ 语句形式为：SELECT vale1, value2 into Table2 from Table1
+ 要求目标表Table2不存在，因为在插入时会自动创建表Table2，并将Table1中指定字段数据复制到Table2中
+
+13 set 和select
+SQL Server推荐使用 SET 而不是 SELECT 对变量进行赋值。
+当表达式返回一个值并对一个变量进行赋值时，推荐使用 SET 方法。
+下表列出 SET 与 SELECT 的区别。请特别注意红色部分。
+
+                            set                      select
+
+同时对多个变量同时赋值：    不支持                 支持
+表达式返回多个值时：        出错                   将返回的最后一个值赋给变量
+表达式未返回值：            变量被赋null值         变量保持原值
+
+14 创建一个临时的存储过程只需要给存储过程名之前加上一个“#”即可，全局的存储过程是给存储过程名前加上两个“#”即可
+临时存储过程创建成功之后当前存储过程中执行可以成功，如果新建查询时执行此临时存储过程，查寻不到，但是全局存储过程可以
+
+类似，@局部变量，@@全局变量
+
+15 临时表定义：
+　　临时表与永久表相似，只是它的创建是在Tempdb中，它只有在一个数据库连接结束后或者由SQL命令DROP掉，才会消失，否则就会一直存在。临时表在创建的时候都会产生SQL Server的系统日志，虽它们在Tempdb中体现，是分配在内存中的，它们也支持物理的磁盘，但用户在指定的磁盘里看不到文件。
+　　临时表分为本地和全局两种，本地临时表的名称都是以“#”为前缀，只有在本地当前的用户连接中才是可见的，当用户从实例断开连接时被删除。全局临时表的名称都是以“##”为前缀，创建后对任何用户都是可见的，当所有引用该表的用户断开连接时被删除
+
+
+16 IN和EXISTS
+
+1.exist,not exist一般都是与子查询一起使用. In可以与子查询一起使用,也可以直接in (a,b.....)
+  in 通过一列过滤，exists可以实现多列复合条件的过滤
+
+2.exist会针对子查询的表使用索引. not exist会对主子查询都会使用索引. in与子查询一起使用的时候,只能针对主查询使用索引. not in则不会使用任何索引. 注意,一直以来认为exists比in效率高的说法是不准确的。
+
+子查询表大的用exists，子查询表小的用in
+
+3.exist的原理:
+exists做为where 条件时，是先对where 前的主查询询进行查询，然后用主查询的结果一个一个的代入exists的查询进行判断，如果为真则输出当前这一条主查询的结果，否则不输出
+
+
+17 行转列问题
+原表三列，一列（有重复值）作group by 字段，作为转换表的主键
+          一列（有重复值）做条件判断，和剩余列交换，别名为其值
+          聚合函数sum处理数值类型，max处理数值和字符类型
+
+18 列拼接成行
+
+首先，确定你要合并的列
+SELECT user_name FROM dbo.users
+
+其次，将其以xml格式输出
+SELECT user_name FROM dbo.users FOR XML PATH
+
+然后，去除包裹的节点名称
+SELECT ',' +user_name FROM dbo.users FOR XML PATH('')
+（这里，','+user_name以后变成了无列名状态，','可以填充具体的分隔符,PATH('')是自定义外层节点名称）
+
+下来，去掉最终结果首位的分隔符，以空字符替代（PS:这样不用数长度）
+SELECT STUFF((SELECT ','+user_name FROM dbo.users FOR XML PATH('')),1,1,'') 
+
+STUFF FOR XML PATH()方法
+
+**MySQL 语法中使用group_concat
+
+19 trim() 只能去ASCII32的字符，空格是半角的，所以不能去全角的空格。去空格建议用replace
+
+20 sql中的除法运算 / ，数字有小数位才会精确计算，否则只是整除计算；
+
+21 批量删除表，  语句拼接：SELECT 'drop table '+ name FROM sys.tables WHERE name LIKE '%HS%'
+   批量删除视图，语句拼接：SELECT 'drop view '+ name FROM sys.views WHERE name LIKE '%HS%'
+
+22 distinct 只能放行首
+
+23 isnull() 和 nullif()

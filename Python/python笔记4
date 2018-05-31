@@ -1,0 +1,245 @@
+面向对象高级
+
+创建了一个class的实例后，我们可以给该实例绑定任何属性和方法。给一个实例绑定的方法，对另一个实例
+是不起作用的，为了给所有实例都绑定方法，可以给class绑定方法
+
+给实例绑定一个方法：
+>>> def set_age(self, age): # 定义一个函数作为实例方法
+...     self.age = age
+...
+>>> from types import MethodType
+>>> s.set_age = MethodType(set_age, s) # 给实例绑定一个方法
+>>> s.set_age(25) # 调用实例方法
+>>> s.age # 测试结果
+25
+
+给class绑定方法：
+>>> def set_score(self, score):
+...     self.score = score
+...
+>>> Student.set_score = set_score
+
+1 Python允许在定义class的时候，定义一个特殊的 __slots__ 变量，来限制该class实例能添加的属性
+__slots__定义的属性仅对当前类实例起作用，对继承的子类是不起作用的，除非在子类中也定义__slots__
+
+slots使用目的是为了减少内存使用而限制绑定属性
+
+class Student(object):
+    __slots__ = ('name', 'age') # 用tuple定义允许绑定的属性名称
+
+2  把一个getter方法变成属性，只需要加上@property就可以了，此时，@property本身又创建了另一个
+装饰器 @方法名.setter，负责把一个setter方法变成属性赋值
+
+
+Python允许使用多重继承,因此，MixIn就是一种常见的设计。
+
+定制类=====待复习
+
+枚举类
+@unique装饰器可以帮助我们检查保证没有重复值。
+
+枚举成员可进行同一性比较、等值比较，但不能进行大小比较
+
+
+元类
+
+类是元类的实例，而实例对象是类的实例. 通俗的就是说，元类就是创建类的类
+
+type()函数既可以返回一个对象的类型，又可以创建出新的类型，比如，我们可以通过type()函数创建
+出Hello类，而无需通过class Hello(object)...的定义
+
+要创建一个class对象，type()函数依次传入3个参数：
+1  class的名称；
+2    继承的父类集合，注意Python支持多重继承，如果只有一个父类，别忘了tuple的单元素写法；
+3  class的方法名称与函数绑定，这里我们把函数fn绑定到方法名hello上。
+
+>>> def fn(self, name='world'): # 先定义函数
+...     print('Hello, %s.' % name)
+...                                                  #type('trick', (,), {})
+>>> Hello = type('Hello', (object,), dict(hello=fn))   # 创建Hello class
+>>> h = Hello()
+>>> h.hello()
+Hello, world.
+
+按照默认习惯，metaclass的类名总是以Metaclass结尾，以便清楚地表示这是一个metaclass，定义时
+传入关键字参数metaclass
+
+ORM全称“Object Relational Mapping”，即对象-关系映射
+要编写一个ORM框架，所有的类都只能动态定义，因为只有使用者才能根据表的结构定义出对应的类来
+
+错误处理
+
+没有错误发生，except语句块不会被执行，但是finally如果有，则一定会被执行（可以没有finally语句）
+可以有多个except来捕获不同类型的错误
+
+python的错误其实也是class，所有的错误类型都继承自BaseException，所以在使用except时需要注意
+的是，它不但捕获该类型的错误，还把其子类也“一网打尽”
+
+Python内置的logging模块可以非常容易地记录错误信息
+
+凡是用print()来辅助查看的地方，都可以用断言（assert）来替代
+启动Python解释器时可以用-O参数来关闭assert
+
+除了assert，还可用logging。logging的好处，它允许你指定记录信息的级别，有debug，info，
+warning，error等几个级别，当我们指定level=INFO时，logging.debug就不起作用了。同理，指定
+level=WARNING后，debug和info就不起作用了。
+
+用pdb，让程序以单步方式运行，可查看运行状态。启动Python解释器时 -m pdb 参数。实际上比较麻烦
+输入命令l来查看代码：  输入命令n可以单步执行代码：  任何时候都可以输入命令p 变量名来查看变量：
+输入命令q结束调试，退出程序：  
+更常见的用法是：    只需import pdb，在可能出错的地方放一个pdb.set_trace()，就设置了一个断点
+运行代码，程序会自动在pdb.set_trace()暂停并进入pdb调试环境，可以用命令p查看变量，或者
+用命令c继续运行
+更多地，调试用的是IDE
+
+
+单元测试是用来对一个模块、一个函数或者一个类来进行正确性检验的测试工作。
+
+I/O  同步模式
+文件读写
+      文件读写是通过open()函数打开的文件对象完成的。使用with语句操作文件IO是个好习惯
+
+调用readline()可以每次读取一行内容，调用readlines()一次读取所有内容并按行返回list
+如果文件很小，read()一次性读取最方便；如果不能确定文件大小，反复调用read(size) byte 比较保险；
+如果是配置文件，调用readlines()最方便：
+
+for line in f.readlines():
+    print(line.strip()) # 把末尾的'\n'删掉
+
+要读取二进制文件，比如图片、视频等等，用'rb'模式打开文件即可 (写入'wb')
+非UTF-8编码的文本文件，需要给open()函数传入encoding参数，例如：
+>>> f = open('/Users/michael/gbk.txt', 'r', encoding='gbk')
+>>> f.read()
+
+文件中可能夹杂了一些非法编码的字符，最简单的方式是直接忽略：
+>>> f = open('/Users/michael/gbk.txt', 'r', encoding='gbk', errors='ignore')
+
+
+StringIO
+
+数据读写不一定是文件，也可以在内存中读写。StringIO顾名思义就是在内存中读写str。
+首先引入模块   from io import StringIO
+>>> from io import StringIO
+>>> f = StringIO()
+>>> f.write('hello')
+>>> f.write('world!')
+>>> print(f.getvalue())
+
+
+BytesIO
+
+StringIO操作的只能是str，如果要操作二进制数据，就需要使用BytesIO。
+>>> from io import BytesIO
+>>> f = BytesIO()
+>>> f.write('中文'.encode('utf-8'))
+>>>f.write(b'\xe4\xb8\xad\xe6\x96\x87')
+>>> print(f.getvalue())
+
+
+操作文件和目录
+
+复制文件的函数居然在os模块中不存在！原因是复制文件并非由操作系统提供的系统调用。
+shutil模块提供了copyfile()的函数，在其中找到很多实用函数，它们可以看做是os模块的补充
+
+>>> import os
+>>> os.name # 操作系统类型
+'posix'
+要获取详细的系统信息，可以调用os.uname()函数
+
+在操作系统中定义的环境变量，保存在os.environ变量中,获取某个环境变量的值，
+
+可以调用os.environ.get('key')
+
+查看、创建和删除目录可以这么调用：
+
+# 查看当前目录的绝对路径:
+>>> os.path.abspath('.')
+'/Users/michael'
+
+# 在某个目录下创建一个新目录，首先把新目录的完整路径表示出来:
+>>> os.path.join('/Users/michael', 'testdir')
+'/Users/michael/testdir'
+
+# 然后创建一个目录:
+>>> os.mkdir('/Users/michael/testdir')
+
+# 删掉一个目录:
+>>> os.rmdir('/Users/michael/testdir')
+
+
+把两个路径合成一个时，不要直接拼字符串，而要通过os.path.join()函数，这样可以正确处理
+不同操作系统的路径分隔符
+
+拆分路径时，也不要直接去拆字符串，而要通过os.path.split()函数，这样可以把一个路径拆分为两部分，
+后一部分总是最后级别的目录或文件名
+
+os.path.splitext()可以直接让你得到文件扩展名:
+>>> os.path.splitext('/path/to/file.txt')
+('/path/to/file', '.txt')
+
+两个例子：1  列出当前目录下的所有目录
+    [x for x in os.listdir('.') if os.path.isdir(x)]
+
+                2  列出所有的.py文件
+    [x for x in os.listdir('.') if os.path.isfile(x) and os.path.splitext(x)[1]=='.py']
+
+在python中，序列化可以理解为：把python的对象编码转换为json格式的字符串，反序列化可以理解为：把json格式字符串解码为python数据对象。
+在python的标准库中，专门提供了json库与pickle库来处理这部分。　　json的dumps方法和loads方法，可实现数据的序列化和反序列化。
+  具体来说，dumps方法，可将json格式数据序列为Python的相关的数据类型；
+  loads方法则是相反，把python数据类型转换为json相应的数据类型格式要求。
+  在序列化时，中文汉字总是被转换为unicode码，在dumps函数中添加参数ensure_ascii=False即可解决。
+
+
+序列化
+
+变量从内存中变成可存储或传输的过程称之为序列化，在Python中叫pickling，在其他语言中也被称之为
+serialization，marshalling，flattening等等，都是一个意思。
+
+序列化之后，就可以把序列化后的内容写入磁盘，或者通过网络传输到别的机器上。
+
+反过来，把变量内容从序列化的对象重新读到内存里称之为反序列化，即unpickling。
+
+Python提供了pickle模块来实现序列化。
+pickle.dumps()方法把任意对象序列化成一个bytes，然后，就可以把这个bytes写入文件。
+>>> f = open('dump.txt', 'wb')
+>>> pickle.dump(d, f)
+>>> f.close()
+
+pickle.load()方法从一个file-like Object中直接反序列化出对象。
+>>> f = open('dump.txt', 'rb')
+>>> m = pickle.load(f)
+>>> f.close()
+>>> m
+{'age': 20, 'score': 88, 'name': 'Bob'}
+
+用Pickle保存那些不重要的数据，不能成功地反序列化也没关系。但更好的方法是序列化为JSON，因为JSON
+表示出来就是一个字符串，可以被所有语言读取，也可以方便地存储到磁盘或者网络传输。JSON不仅是标准格式，
+并且比XML更快，而且可以直接在Web页面中读取，非常方便。
+
+把Python对象变成一个JSON：
+>>> import json
+>>> d = dict(name='Bob', age=20, score=88)
+>>> json.dumps(d)
+'{"age": 20, "score": 88, "name": "Bob"}'
+
+把JSON反序列化为Python对象，用loads()--[把JSON的字符串反序列化]
+或者对应的load()--[从file-like Object中读取字符串并反序列化]方法：
+>>> json_str = '{"age": 20, "score": 88, "name": "Bob"}'
+>>> json.loads(json_str)
+{'age': 20, 'score': 88, 'name': 'Bob'}
+
+*****************************
+
+把任意class的实例 [-stu-] 变为dict：
+print(json.dumps(stu, default=lambda obj: obj.__dict__))
+
+把JSON反序列化为一个Student对象实例，loads()方法首先转换出一个dict对象，然后，我们传
+入的object_hook函数负责把dict转换为Student实例：
+
+def dict2student(d):
+    return Student(d['name'], d['age'], d['score'])
+
+>>> json_str = '{"age": 20, "score": 88, "name": "Bob"}'
+>>> print(json.loads(json_str, object_hook=dict2student))
+<__main__.Student object at 0x10cd3c190>
+

@@ -1,0 +1,120 @@
+面向对象
+
+面向对象最重要的概念就是类（Class）和实例（Instance），必须牢记类是抽象的模板
+
+class后面紧接着是类名，即Student，类名通常是大写开头的单词，紧接着是(object)，
+表示该类是从哪个类继承下来的. object类，这是所有类最终都会继承的类
+
+通过定义一个特殊的__init__方法，在创建实例的时候把必须绑定的属性强制填写进去
+ 注意：特殊方法“init”前后有两个下划线！！！  __init__方法的第一个参数永远是self，表示实例本身
+
+有了__init__方法，在创建实例的时候，就不能传入空的参数了，必须传入与__init__方法匹配的参数，
+但self不需要传。仍然可以用默认参数、可变参数、关键字参数和命名关键字参数
+
+在类内部自定义一个方法，除了第一个参数是self外，其他和普通函数一样
+
+既然Student实例本身就拥有这些数据，要访问这些数据，就没有必要从外面的函数去访问，可以直接在
+Student类的内部定义访问数据的函数，这样，就把“数据”给封装起来了
+
+和静态语言不同，Python允许对实例变量绑定任何数据。即凭空新增属性赋值、调用。对于两个实例变量，
+虽然是同一个类的不同实例，但拥有的变量名称都可能不同
+
+访问限制
+实例的变量名以__开头【属性的名称前加上两个下划线__】，就变成了一个私有变量（private），
+只有内部可以访问，外部不能访问
+这样就确保了外部代码不能随意修改对象内部的状态，这样通过访问限制的保护，代码更加健壮。若要在外部
+访问或修改数据，可通过get()、set()方法
+
+**在Python中，变量名类似__xxx__的，即以双下划线开头，并且以双下划线结尾的，是特殊变量，
+特殊变量可直接访问，不是private变量，所以，不能用__name__、__score__这样的变量名。
+----------------------------------------------------------------------------------------------------------
+典型错误：
+>>> bart = Student('Bart Simpson', 98)
+>>> bart.get_name()
+'Bart Simpson'
+>>> bart.__name = 'New Name' # 设置__name变量！
+>>> bart.__name
+'New Name'
+
+表面上看，外部代码“成功”地设置了__name变量，但实际上这个__name变量和class内部的__name变量不是
+一个变量！内部的__name变量已经被Python解释器自动改成了_Student__name，而外部代码给bart新增了
+一个__name变量。不信试试：
+
+>>> bart.get_name() # get_name()内部返回self.__name
+'Bart Simpson'
+-------------------------------------------------------------------------------------------------------------
+
+继承
+
+继承使子类获得了父类的全部功能，子类可以新增方法，也可以覆盖父类中已有的方法
+
+在继承关系中，如果一个实例的数据类型是某个子类，那它的数据类型也可以被看做是父类
+
+不同子类重写方法就实现了----多态
+
+鸭子类型：并不要求严格的继承体系，一个对象只要“看起来像鸭子，走起路来像鸭子”，那它就可以被看做是鸭子
+
+对于静态语言（例如Java）来说，如果需要传入Animal类型，则传入的对象必须是Animal类型或者它的子类，否则，将无法调用run()方法。
+对于Python这样的动态语言来说，则不一定需要传入Animal类型。我们只需要保证传入的对象有一个run()
+【Animal类中有的方法】方法就可以了
+
+
+获取对象信息
+
+判断一个变量是否是某个类型可以用isinstance()判断：
+>>> isinstance(a, list)
+True
+>>> isinstance(b, Animal)
+True
+>>> isinstance(c, Dog)
+True
+
+能用type()判断的基本类型也可以用isinstance()判断，并且还可以判断一个变量是否是某些类型中的一种
+>>> isinstance([1, 2, 3], (list, tuple))
+True
+>>> isinstance((1, 2, 3), (list, tuple))
+True
+
+判断对象类型，使用type()函数，如果一个变量指向函数或者类，也可以用type()判断：
+>>> type(123)
+<class 'int'>
+>>> type('str')
+<class 'str'>
+>>> type(None)
+<type(None) 'NoneType'>
+
+>>> type(abs)
+<class 'builtin_function_or_method'>
+>>> type(a)
+<class '__main__.Animal'>
+
+判断基本数据类型可以直接写int，str等，但如果要判断一个对象是否是函数怎么办？
+可以使用types模块中定义的常量：
+
+>>> import types
+>>> def fn():
+...     pass
+...
+>>> type(fn)==types.FunctionType
+True
+>>> type(abs)==types.BuiltinFunctionType
+True
+>>> type(lambda x: x)==types.LambdaType
+True
+>>> type((x for x in range(10)))==types.GeneratorType
+True
+
+如果要获得一个对象的所有属性和方法，可以使用dir()函数，它返回一个包含字符串的list
+
+配合getattr()、setattr()以及hasattr()，我们可以直接操作一个对象的状态
+
+一个正确的用法的例子如下：
+def readImage(fp):
+    if hasattr(fp, 'read'):
+        return readData(fp)
+    return None
+
+不要把实例属性和类属性使用相同的名字，因为相同名称的实例属性将屏蔽掉类属性，但当你删除实例属性后，
+(用del关键字)再使用相同的名称，访问到的将是类属性
+
+

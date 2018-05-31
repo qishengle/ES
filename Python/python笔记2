@@ -1,0 +1,211 @@
+高级特性
+
+1  切片
+L[0:3]表示，从索引0开始取，直到索引3为止，但不包括索引3。即索引0，1，2，正好是3个元素，
+如果第一个索引是0，还可以省略
+
+支持倒数切片,倒数第一个元素的索引是-1
+
+tuple也是一种list，唯一区别是tuple不可变。因此，tuple也可以用切片操作，只是操作的结果仍是tuple
+
+  [起始:截至:步幅]
+前10个数，每两个取一个：   L[:10:2]    倒序输出 L[::-1]
+
+2  迭代
+通过for循环来遍历一个对象（可迭代对象），这种遍历我们称为迭代（Iteration）
+如何判断一个对象是可迭代对象呢？方法是通过collections模块的Iterable类型判断：
+>>> from collections import Iterable
+>>> isinstance('abc', Iterable) # str是否可迭代
+True
+
+
+默认情况下，dict迭代的是key。for key in dict1:
+如果要迭代value，可以用for value in d.values():，
+如果要同时迭代key和value，可以用for k, v in d.items():
+
+enumerate函数可以把一个list变成索引-元素对:
+>>> for i, val in enumerate(['A', 'B', 'C']):
+...     print(i, val)
+...
+0 A
+1 B
+2 C
+
+3  列表生成式
+生成list [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  可以用range(1, 11)
+生成 L[1x1, 2x2, 3x3, ..., 10x10]         可以用[x * x for x in range(1, 11)]
+筛选出仅偶数的平方：  [x * x for x in range(1, 11) if x % 2 == 0]
+
+使用两层循环，可以生成全排列：
+>>> [m + n for m in 'ABC' for n in 'XYZ']
+['AX', 'AY', 'AZ', 'BX', 'BY', 'BZ', 'CX', 'CY', 'CZ']
+
+4  生成器
+Python中，这种一边循环一边计算的机制，称为生成器：generator。它也是可迭代对象
+generator保存的是算法，每次调用next(g)，就计算出g的下一个元素的值，直到计算到最后一个元素，
+没有更多的元素时，抛出StopIteration的错误
+
+方法一：把一个列表生成式的[]改成()，就创建了一个generator
+
+如果推算的算法比较复杂，用类似列表生成式的for循环无法实现的时候，还可以用函数来实现。如：
+斐波拉契数列用列表生成式写不出来，但是，可用函数把它打印出来
+----------------------------------------------------------------------
+注意，赋值语句：a, b = b, a + b
+                            相当于：
+t = (b, a + b) # t是一个tuple
+a = t[0]
+b = t[1]
+----------------------------------------------------------------------
+
+方法二：如果一个函数定义中包含yield关键字，那么这个函数就不再是一个普通函数，而是一个generator
+generator和函数的执行流程不一样。函数是顺序执行，遇到return语句或者最后一行函数语句就返回。
+而generator在每次调用next()时执行，遇到yield语句返回，再次执行时从上次返回的yield处继续执行。
+简单说，yield相当于暂态return
+
+调用generator时，首先要生成一个generator对象，然后用next()函数不断获得下一个返回值
+把函数改成generator后，我们基本上不会用next()来获取下一个返回值，而是直接使用for循环来迭代。
+用for循环调用generator时，发现拿不到generator的return语句的返回值。如果想要拿到返回值，
+必须捕获StopIteration错误，返回值包含在StopIteration的value中
+
+对于函数改成的generator来说，遇到return语句或者执行到函数体最后一行语句，就是结束generator
+的指令，for循环随之结束。
+
+**********杨辉三角
+
+5  迭代器
+可以被next()函数调用并不断返回下一个值的对象称为迭代器：Iterator
+使用isinstance()判断一个对象是否是Iterator对象
+
+生成器都是Iterator对象，但list、dict、str虽然是Iterable，却不是Iterator。
+
+Iterator对象表示的是一个数据流，Iterator对象可以被next()函数调用并不断返回下一个数据，
+直到没有数据时抛出StopIteration错误。我们不知道序列的长度，只能不断通过next()函数实现按需计算
+下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算
+
+小结
+凡是可作用于for循环的对象都是Iterable类型；
+
+凡是可作用于next()函数的对象都是Iterator类型，它们表示一个惰性计算的序列；
+
+集合数据类型如list、dict、str等是Iterable但不是Iterator，不过可以通过iter()函数获得一个
+Iterator对象。
+
+-----------------------------------------------------------------------------------------
+函数式编程
+函数式编程的一个特点就是，允许把函数本身作为参数传入另一个函数，还允许返回一个函数！
+函数本身也可以赋值给变量，即：变量可以指向函数
+
+高阶函数 Higher-order function
+
+map/reduce
+map()函数接收两个参数，一个是函数，一个是Iterable，map将传入的函数依次作用到序列的每个元素，
+并把结果作为新的Iterator返回。
+reduce把一个函数作用在一个序列[x1, x2, x3, ...]上，这个函数必须接收两个参数，reduce把结果
+继续和序列的下一个元素做累积计算
+reduce需要导入声明  from functools import reduce
+
+filter()也接收一个函数和一个序列。和map()不同的是，filter()把传入的函数依次作用于每个元素，
+然后根据返回值是True还是False决定保留还是丢弃该元素。
+
+filter()函数返回的是一个Iterator，是一个惰性序列，所以需要用list()函数获得所有结果并返回list
+
+排序
+
+sorted()函数就可以对list进行排序 ：  sorted(list1)
+还可以接收一个key函数来实现自定义的排序字段,要进行反向排序，可以传入第三个参数reverse=True:
+>>> sorted(['bob', 'about', 'Zoo', 'Credit'], key=str.lower, reverse=True)
+['Zoo', 'Credit', 'bob', 'about']
+
+闭包
+返回一个函数时，牢记该函数并未执行，返回函数中不要引用任何可能会变化的变量。函数名跟括号才会执行
+
+匿名函数
+关键字lambda表示匿名函数
+匿名函数有个限制，就是只能有一个表达式，不用写return，返回值就是该表达式的结果。
+
+用匿名函数有个好处----不必担心函数名冲突。匿名函数也是一个函数对象，可以把匿名函数赋值给一个变量，
+再利用变量来调用该函数：
+
+装饰器    装饰器=高阶函数+函数嵌套+闭包
+在代码运行期间动态增加功能的方式，称之为“装饰器”（Decorator）
+函数对象有一个__name__属性，可以拿到函数的名字
+
+装饰  实现的效果就是，不改变原函数的定义和调用方式，在函数调用前后增加其他处理操作。
+如：-------------------------------------------------------------------------------
+不带参
+def log(func):
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        f=func(*args, **kw)
+        print('end')
+        return f
+    return wrapper
+
+带参  如果decorator本身需要传入参数，那就需要编写一个返回decorator的高阶函数
+def log(text):
+    def decorator(func):
+        def wrapper(*args, **kw):
+            print('%s %s():' % (text, func.__name__))
+            f=func(*args, **kw)
+            print('end')
+            return f
+        return wrapper
+    return decorator
+
+@log('execute')    #相当于  now = log('execute')(now)  @语法，置于函数的定义处
+def now():
+    print('2015-3-25')
+
+我们来剖析上面的语句，首先执行log('execute')，返回的是decorator函数，再调用返回的函数，
+参数是now函数，返回值最终是wrapper函数。
+
+函数也是对象，它有__name__等属性，但你去看经过decorator装饰之后的函数，它们的__name__已经
+从原来的'now'变成了'wrapper'    -------?python3中不需要了？
+import functools
+
+def log(text):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kw):
+            print('%s %s():' % (text, func.__name__))
+            return func(*args, **kw)
+        return wrapper
+    return decorator
+
+@可写多行，即多个修饰
+
+偏函数
+当函数的参数个数太多，需要简化时，使用functools.partial可以创建一个新的函数，这个新函数可以固定住原函数的部分参数，从而在调用时更简单
+创建偏函数时，实际上可以接收函数对象、*args和**kw这3个参数
+
+int2 = functools.partial(int, base=2)
+实际上固定了int()函数的关键字参数base，也就是：
+int2('10010')  相当于：kw = { 'base': 2 }
+                     int('10010', **kw)
+
+max2 = functools.partial(max, 10)
+实际上会把10作为*args的一部分自动加到左边，也就是：
+max2(5, 6, 7)  相当于： args = (10, 5, 6, 7)
+                      max(*args)
+
+-------------------------------------------------------------------------------------------
+
+模块
+
+每一个包目录下面都会有一个__init__.py的文件，这个文件是必须存在的，否则，Python就把这个目录
+当成普通目录，而不是一个包。__init__.py可以是空文件，也可以有Python代码，因为__init__.py
+本身就是一个模块，而它的模块名就是mycompany
+
+sys模块有一个argv变量，用list存储了命令行的所有参数。argv至少有一个元素，因为第一个参数永远是
+该.py文件的名称
+
+    作用域
+正常的函数和变量名是公开的（public），可以被直接引用
+类似__xxx__这样的变量是特殊变量，可以被直接引用，但是有特殊用途。
+类似_xxx和__xxx这样的函数或变量就是非公开的（private），不应该被直接引用
+
+
+
+
+
+
