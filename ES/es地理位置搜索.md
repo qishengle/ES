@@ -34,6 +34,7 @@ Peano曲线突变比较厉害，空间局部性不是特别好，相比之下Hil
 找出与指定点距离在给定最小距离和最大距离之间的点。 
 **geo_polygon**
 找出落在多边形中的点。 这个过滤器使用代价很大 。当你需要使用它，最好使用 [geo-shapes](https://www.elastic.co/guide/cn/elasticsearch/guide/current/geo-shapes.html) 。
+  `Geo-shapes 不能用于计算距离、排序、打分以及聚合`
 > 地理坐标过滤器使用代价昂贵,先过滤掉尽可能多的文档，最后才交给地理坐标过滤器处理。
 
 geohash 的长度越长，它的精度就越高. 
